@@ -54,8 +54,8 @@ void setup()
 
 char buffer[16 + sizeof('\0')];
 
-#define OZ_PER_CUP 8
-#define GRAMS_TO_OZ 0.0338140
+#define OZ_PER_GRAM 0.0338140
+#define CUP_PER_OZ 0.125
 
 int current_consistent_reading_grams = 0;
 int previous_consistent_reading_grams = 0;
@@ -101,24 +101,35 @@ void loop()
           remaining_grams = 0;
         }
   
-        int oz = gramsToOz(remaining_grams);
-        int cups = oz / OZ_PER_CUP;
+        float oz = remaining_grams * OZ_PER_GRAM;
+        float cups = oz * CUP_PER_OZ;
 
         chars_written += printCups(cups);
         chars_written += lcd.print(" (");
-        chars_written += printOz(oz);
+        chars_written += printOz(int(oz));
         chars_written += lcd.print(")");
       }
     }
   }
-  
-  int remaining_spaces = 16 - chars_written - 1;
+
+  int remaining_spaces = 16 - chars_written;
+  for (int i=remaining_spaces; i > 0; i--)
+  {
+    lcd.print(" ");
+  }
+
+// --- second LCD line
+
+  lcd.setCursor(0,1);
+  chars_written = 0;
+  remaining_spaces = 16 - chars_written - 1;
   for (int i=remaining_spaces; i > 0; i--)
   {
     lcd.print(" ");
   }
   printNextSpinnerChar();
   
+    
   // debug
   /*
   lcd.setCursor(0,1);
@@ -148,12 +159,6 @@ bool didGetRefilled(int previous, int current)
 }
 
 
-int gramsToOz(int grams)
-{
-  return int(float(grams) * GRAMS_TO_OZ);
-}
-
-
 void digitalToggle(int pin)
 {
   int val = digitalRead(pin);
@@ -165,13 +170,6 @@ void digitalToggle(int pin)
   {
     digitalWrite(pin, LOW);
   }
-}
-
-
-bool isVonShefCarafe(int full_weight_grams)
-{
-  int spread = VONSHEF_CARAFE_EMPTY_WEIGHT_GRAMS - UPDATE_CARAFE_EMPTY_WEIGHT_GRAMS;
-  
 }
 
 
@@ -223,12 +221,18 @@ int printOz(int oz)
   return chars_written;
 }
 
-int printCups(int cups)
+int printCups(float cups)
 {
   int chars_written = 0;
-  snprintf(buffer, sizeof(buffer), "%i", cups);
-  chars_written = lcd.print(buffer);
-  chars_written += lcd.print(" cups");
+  chars_written = lcd.print(cups, 1);
+  if (cups > 1.0)
+  {
+    chars_written += lcd.print(" cups");
+  }
+  else
+  {
+    chars_written += lcd.print(" cup");
+  }
   return chars_written;
 }
 
