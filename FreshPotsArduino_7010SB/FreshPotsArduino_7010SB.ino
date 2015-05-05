@@ -106,7 +106,7 @@ void loop()
 
         chars_written += printCups(cups);
         chars_written += lcd.print(" (");
-        chars_written += printOz(int(oz));
+        chars_written += printOz(oz);
         chars_written += lcd.print(")");
       }
     }
@@ -212,11 +212,10 @@ int printGrams(int grams)
   return chars_written;
 }
 
-int printOz(int oz)
+int printOz(float oz)
 {
   int chars_written = 0;
-  snprintf(buffer, sizeof(buffer), "%i", oz);
-  chars_written = lcd.print(buffer);
+  chars_written = lcd.print(oz, 0);
   chars_written += lcd.print(" oz");
   return chars_written;
 }
