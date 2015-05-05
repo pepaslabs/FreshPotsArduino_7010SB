@@ -73,43 +73,40 @@ void loop()
   int remaining_grams = 0;
   
   int grams = readFrom7010SB();
-  if (grams > 0)
-  {  
-    if (latestReadingIsUsable(grams) == true)
-    {
-      previous_consistent_reading_grams = current_consistent_reading_grams;
-      current_consistent_reading_grams = grams;
+  if (grams > 0 && latestReadingIsUsable(grams) == true)
+  {
+    previous_consistent_reading_grams = current_consistent_reading_grams;
+    current_consistent_reading_grams = grams;
 
-      if (didGetRefilled(previous_consistent_reading_grams, current_consistent_reading_grams) == true)
+    if (didGetRefilled(previous_consistent_reading_grams, current_consistent_reading_grams) == true)
+    {
+      full_carafe_grams = current_consistent_reading_grams;
+      last_refill_millis = millis();
+    }
+  
+    if (current_consistent_reading_grams > EMPTY_SCALE_THRESHOLD)
+    {
+      // account for when the scale "settles" and drifts up by 10 grams
+      if (current_consistent_reading_grams > full_carafe_grams)
       {
         full_carafe_grams = current_consistent_reading_grams;
-        last_refill_millis = millis();
       }
-  
-      if (current_consistent_reading_grams > EMPTY_SCALE_THRESHOLD)
+      
+      int carafe_grams = full_carafe_grams - COFFEE_GRAMS;
+      
+      remaining_grams = current_consistent_reading_grams - carafe_grams;
+      if (remaining_grams < 0)
       {
-        // account for when the scale "settles" and drifts up by 10 grams
-        if (current_consistent_reading_grams > full_carafe_grams)
-        {
-          full_carafe_grams = current_consistent_reading_grams;
-        }
-      
-        int carafe_grams = full_carafe_grams - COFFEE_GRAMS;
-      
-        remaining_grams = current_consistent_reading_grams - carafe_grams;
-        if (remaining_grams < 0)
-        {
-          remaining_grams = 0;
-        }
-  
-        float oz = remaining_grams * OZ_PER_GRAM;
-        float cups = oz * CUP_PER_OZ;
-
-        chars_written += printCups(cups);
-        chars_written += lcd.print(" (");
-        chars_written += printOz(oz);
-        chars_written += lcd.print(")");
+        remaining_grams = 0;
       }
+  
+      float oz = remaining_grams * OZ_PER_GRAM;
+      float cups = oz * CUP_PER_OZ;
+
+      chars_written += printCups(cups);
+      chars_written += lcd.print(" (");
+      chars_written += printOz(oz);
+      chars_written += lcd.print(")");
     }
   }
 
@@ -124,7 +121,10 @@ void loop()
   lcd.setCursor(0,1);
   chars_written = 0;
   
-  chars_written += printAge(last_refill_millis);
+  if (grams > 0 && latestReadingIsUsable(grams) == true)
+  {
+    chars_written += printAge(last_refill_millis);
+  }
   
   remaining_spaces = 16 - chars_written - 1;
   for (int i=remaining_spaces; i > 0; i--)
