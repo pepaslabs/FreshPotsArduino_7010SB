@@ -18,6 +18,8 @@ SoftwareSerial mySerial(RX_PIN, TX_PIN);
 #define LCD_D7_PIN 7
 LiquidCrystal lcd(LCD_RS_PIN, LCD_EN_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
+#include "Time.h"
+
 #define UPDATE_CARAFE_EMPTY_WEIGHT_GRAMS 1475
 #define VONSHEF_CARAFE_EMPTY_WEIGHT_GRAMS 1655
 #define COFFEE_GRAMS 1890
