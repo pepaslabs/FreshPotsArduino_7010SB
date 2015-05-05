@@ -18,8 +18,6 @@ SoftwareSerial mySerial(RX_PIN, TX_PIN);
 #define LCD_D7_PIN 7
 LiquidCrystal lcd(LCD_RS_PIN, LCD_EN_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
-#include "Time.h"
-
 #define UPDATE_CARAFE_EMPTY_WEIGHT_GRAMS 1475
 #define VONSHEF_CARAFE_EMPTY_WEIGHT_GRAMS 1655
 #define COFFEE_GRAMS 1890
@@ -62,7 +60,7 @@ char buffer[16 + sizeof('\0')];
 int current_consistent_reading_grams = 0;
 int previous_consistent_reading_grams = 0;
 int full_carafe_grams = 0;
-
+uint32_t last_refill_millis = 0;
 
 void loop()
 {
@@ -85,6 +83,7 @@ void loop()
       if (didGetRefilled(previous_consistent_reading_grams, current_consistent_reading_grams) == true)
       {
         full_carafe_grams = current_consistent_reading_grams;
+        last_refill_millis = millis();
       }
   
       if (current_consistent_reading_grams > EMPTY_SCALE_THRESHOLD)
@@ -124,6 +123,9 @@ void loop()
 
   lcd.setCursor(0,1);
   chars_written = 0;
+  
+  chars_written += printAge(last_refill_millis);
+  
   remaining_spaces = 16 - chars_written - 1;
   for (int i=remaining_spaces; i > 0; i--)
   {
@@ -234,6 +236,72 @@ int printCups(float cups)
   {
     chars_written += lcd.print(" cup");
   }
+  return chars_written;
+}
+
+int printAge(uint32_t last_reset_millis)
+{
+  int chars_written = 0;
+  
+  uint32_t age = (millis() - last_reset_millis) / 1000;
+  
+  if (age < 60)
+  {
+    chars_written += lcd.print(age);
+    chars_written += lcd.print(" seconds old");
+  }
+  else if (age < 3600)
+  {
+    int minutes = age / 60;
+    chars_written += lcd.print(minutes);
+    if (minutes == 1)
+    {
+      chars_written += lcd.print(" minute old");
+    }
+    else
+    {
+      chars_written += lcd.print(" minutes old");
+    }
+  }
+  else if (age < 86400)
+  {
+    float hours = age / 3600.0;
+    if (hours <= 1.05)
+    {
+      chars_written += lcd.print(hours, 0);
+      chars_written += lcd.print(" hour old");
+    }
+    if (hours < 10)
+    {
+      chars_written += lcd.print(hours, 1);
+      chars_written += lcd.print(" hours old");
+    }
+    else
+    {
+      chars_written += lcd.print(hours, 0);
+      chars_written += lcd.print(" hours old");
+    }
+  }
+  else
+  {
+    float days = age / 86400.0;
+    if (days <= 1.05)
+    {
+      chars_written += lcd.print(days, 0);
+      chars_written += lcd.print(" day old");
+    }
+    if (days < 10)
+    {
+      chars_written += lcd.print(days, 1);
+      chars_written += lcd.print(" days old");
+    }
+    else
+    {
+      chars_written += lcd.print(days, 0);
+      chars_written += lcd.print(" days old");
+    }
+  }
+  
   return chars_written;
 }
 
