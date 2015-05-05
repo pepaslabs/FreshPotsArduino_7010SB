@@ -247,8 +247,7 @@ int printAge(uint32_t last_reset_millis)
   
   if (age < 60)
   {
-    chars_written += lcd.print(age);
-    chars_written += lcd.print(" seconds old");
+    chars_written += lcd.print("<1 minute old");
   }
   else if (age < 3600)
   {
